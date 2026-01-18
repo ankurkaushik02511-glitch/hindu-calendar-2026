@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hindu Calendar 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root{
+  --bg-light:#ffffff;
+  --card-light:#f0f0f0;
+  --text-light:#000000;
+  --muted-light:#555555;
+
+  --bg-dark:#0b0b0b;
+  --card-dark:#151515;
+  --text-dark:#ffffff;
+  --muted-dark:#aaaaaa;
+
+  --accent:#f4c430;
+  --green:#2ecc71;
+  --red:#e74c3c;
+}
+
+body{
+  margin:0;
+  font-family:system-ui,Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  width:95%;
+  max-width:700px;
+}
+
+header{
+  background:var(--card-light);
+  padding:14px;
+  text-align:center;
+  font-size:20px;
+  position:relative;
+  border-bottom:1px solid #ccc;
+}
+
+header .calendar-icon{
+  position:absolute;
+  right:10px;
+  top:14px;
+  cursor:pointer;
+  font-size:22px;
+}
+
+.controls{
+  margin-top:8px;
+}
+
+button,select,input{
+  padding:6px 10px;
+  border-radius:6px;
+  margin:2px;
+  cursor:pointer;
+}
+
+section{
+  padding:14px 0;
+}
+
+.card{
+  background:var(--card-light);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:14px;
+}
+
+.title{
+  color:var(--accent);
+  font-size:18px;
+  margin-bottom:10px;
+}
+
+.fest-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.festival{
+  flex:1 1 45%;
+  background:#fff8c0;
+  border-radius:6px;
+  padding:8px;
+  margin-bottom:6px;
+  box-sizing:border-box;
+}
+.name{font-size:16px;font-weight:600;}
+.date{font-size:13px;color:var(--muted-light);}
+.shubh{color:var(--green);font-size:13px;}
+.ashubh{color:var(--red);font-size:13px;}
+
+.month-section{
+  margin-bottom:20px;
+}
+
+.month-select{
+  width:100%;
+  margin-bottom:10px;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+.calendar-view{
+  display:none;
+  background:var(--card-light);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:14px;
+}
+
+.calendar-weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  font-weight:bold;
+  text-align:center;
+  margin-bottom:4px;
+}
+
+.calendar-dates{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+}
+.day{text-align:center;font-weight:600;color:var(--muted-light);}
+.date-box{
+  border:1px solid #ccc;
+  text-align:center;
+  padding:6px;
+  border-radius:4px;
+}
+
+footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted-light);
+  padding:12px;
+}
+
+/* DARK MODE STYLES */
+.dark-mode{
+  background:var(--bg-dark);
+  color:var(--text-dark);
+}
+.dark-mode .card,.dark-mode .calendar-view,.dark-mode header{
+  background:var(--card-dark);
+  color:var(--text-dark);
+}
+.dark-mode .day{color:var(--muted-dark);}
+.dark-mode .date-box{border:1px solid #555;}
+.dark-mode .date{color:var(--muted-dark);}
+.dark-mode .festival{
+  background:#444444;
+}
+.dark-mode .festival .name,
+.dark-mode .festival .date,
+.dark-mode .festival .shubh,
+.dark-mode .festival .ashubh{
+  color:#ffffff;
+}
+.dark-mode .shubh{color:var(--green);}
+.dark-mode .ashubh{color:var(--red);}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <header>
+    Hindu Calendar 2026
+    <span class="calendar-icon" onclick="showCalendar()">📅</span>
+    <div class="controls">
+      <button onclick="setLang('en')">English</button>
+      <button onclick="setLang('hi')">हिंदी</button>
+      <button onclick="setTheme('light')">Light Theme</button>
+      <button onclick="setTheme('dark')">Dark Theme</button>
+    </div>
+  </header>
+
+  <section class="card" id="festival-section">
+    <div class="title" id="festTitle"></div>
+    <input id="search" placeholder="Search festival..." oninput="renderFestivals()">
+    <div id="festivals"></div>
+  </section>
+
+  <section class="card calendar-view" id="calendar-section">
+    <button onclick="hideCalendar()">⬅ Back</button>
+    <select class="month-select" id="monthSelect" onchange="renderCalendar(this.value)"></select>
+    <div class="calendar-weekdays" id="calendarWeekdays"></div>
+    <div class="calendar-dates" id="calendarDates"></div>
+  </section>
+
+  <footer>
+    Festival dates & Muhurat are indicative and may vary by region
+  </footer>
+</div>
+
+<script>
+let lang="en";
+let theme="light";
+
+const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const days={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],hi:["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"]};
+
+const text={
+  en:{fest:"Festivals & Muhurat",cal:"Calendar 2026"},
+  hi:{fest:"त्योहार और मुहूर्त",cal:"कैलेंडर 2026"}
+};
+
+const festivals=[
+{en:"Makar Sankranti",hi:"मकर संक्रांति",date:"14 Jan",month:0,shubh:"Morning to Sunset",ashubh:"Rahu Kaal"},
+{en:"Vasant Panchami",hi:"वसंत पंचमी",date:"23 Jan",month:0,shubh:"Morning",ashubh:"Afternoon"},
+{en:"Basant Panchami",hi:"बसंत पंचमी",date:"5 Feb",month:1,shubh:"Morning",ashubh:"Afternoon"},
+{en:"Maha Shivratri",hi:"महाशिवरात्रि",date:"15 Feb",month:1,shubh:"Night Puja",ashubh:"None"},
+{en:"Holika Dahan",hi:"होलीका दहन",date:"23 Mar",month:2,shubh:"Evening",ashubh:"Avoid"},
+{en:"Holi",hi:"होली",date:"24 Mar",month:2,shubh:"Full Day",ashubh:"None"},
+{en:"Chaitra Navratri Begins",hi:"चैत्र नवरात्रि प्रारंभ",date:"19 Mar",month:2,shubh:"Ghatasthapana Morning",ashubh:"Avoid Abhijit"},
+{en:"Ram Navami",hi:"राम नवमी",date:"26 Mar",month:2,shubh:"Midday",ashubh:"Rahu Kaal"},
+{en:"Chaitra Navratri Ends",hi:"चैत्र नवरात्रि समाप्त",date:"27 Mar",month:2,shubh:"Morning",ashubh:"None"},
+{en:"Hanuman Jayanti",hi:"हनुमान जयंती",date:"2 Apr",month:3,shubh:"Morning to Noon",ashubh:"Evening"},
+{en:"Mahavir Jayanti",hi:"महावीर जयंती",date:"13 Apr",month:3,shubh:"Morning",ashubh:"Afternoon"},
+{en:"Akshaya Tritiya",hi:"अक्षय तृतीया",date:"21 Apr",month:3,shubh:"Full Day",ashubh:"None"},
+{en:"Guru Purnima",hi:"गुरु पूर्णिमा",date:"17 Jul",month:6,shubh:"Morning",ashubh:"Avoid Afternoon"},
+{en:"Hariyali Teej",hi:"हरियाली तीज",date:"29 Jul",month:6,shubh:"Full Day",ashubh:"None"},
+{en:"Raksha Bandhan",hi:"रक्षा बंधन",date:"19 Aug",month:7,shubh:"After Morning",ashubh:"Bhadra"},
+{en:"Janmashtami",hi:"कृष्ण जन्माष्टमी",date:"28 Aug",month:7,shubh:"Midnight Puja",ashubh:"None"},
+{en:"Ganesh Chaturthi",hi:"गणेश चतुर्थी",date:"13 Sep",month:8,shubh:"Morning",ashubh:"Rahu Kaal"},
+{en:"Sharad Navratri Begins",hi:"शारदीय नवरात्रि प्रारंभ",date:"18 Oct",month:9,shubh:"Ghatasthapana Morning",ashubh:"Afternoon"},
+{en:"Durga Ashtami",hi:"दुर्गा अष्टमी",date:"25 Oct",month:9,shubh:"Morning",ashubh:"Evening"},
+{en:"Dussehra",hi:"दशहरा",date:"26 Oct",month:9,shubh:"Afternoon",ashubh:"Morning"},
+{en:"Diwali",hi:"दीपावली",date:"8 Nov",month:10,shubh:"Evening Lakshmi Puja",ashubh:"Late Night"},
+{en:"Govardhan Puja",hi:"गोवर्धन पूजा",date:"9 Nov",month:10,shubh:"Morning",ashubh:"None"},
+{en:"Bhai Dooj",hi:"भाई दूज",date:"10 Nov",month:10,shubh:"Morning",ashubh:"None"},
+{en:"Chhath Puja",hi:"छठ पूजा",date:"21 Nov",month:10,shubh:"Morning & Evening",ashubh:"None"}
+];
+
+function setLang(l){lang=l;renderFestivals();renderCalendar(document.getElementById("monthSelect").value);}
+function setTheme(t){
+  theme=t;
+  if(t==="dark") document.body.classList.add("dark-mode");
+  else document.body.classList.remove("dark-mode");
+}
+
+function showCalendar(){
+  document.getElementById("festival-section").style.display="none";
+  document.getElementById("calendar-section").style.display="block";
+  renderMonthSelect();
+  const now=new Date();
+  const currentMonth=now.getMonth();
+  document.getElementById("monthSelect").value=currentMonth;
+  renderCalendar(currentMonth);
+}
+
+function hideCalendar(){
+  document.getElementById("calendar-section").style.display="none";
+  document.getElementById("festival-section").style.display="block";
+}
+
+function renderMonthSelect(){
+  const sel=document.getElementById("monthSelect");
+  sel.innerHTML="";
+  months.forEach((m,i)=>sel.innerHTML+=`<option value="${i}">${m}</option>`);
+}
+
+function renderCalendar(monthIndex){
+  const weekdays=document.getElementById("calendarWeekdays");
+  const dates=document.getElementById("calendarDates");
+  weekdays.innerHTML="";
+  dates.innerHTML="";
+  monthIndex=parseInt(monthIndex);
+
+  // Weekdays
+  days[lang].forEach(d=>weekdays.innerHTML+=`<div class="day">${d}</div>`);
+
+  const firstDay=new Date(2026,monthIndex,1).getDay();
+  const totalDays=new Date(2026,monthIndex+1,0).getDate();
+
+  for(let i=0;i<firstDay;i++) dates.innerHTML+="<div></div>";
+
+  for(let i=1;i<=totalDays;i++) dates.innerHTML+=`<div class="date-box">${i}</div>`;
+}
+
+function renderFestivals(){
+  const container=document.getElementById("festivals");
+  const searchTerm=document.getElementById("search").value.toLowerCase();
+  document.getElementById("festTitle").innerText=text[lang].fest;
+  container.innerHTML="";
+
+  months.forEach((m,i)=>{
+    let monthFest=festivals.filter(f=>f.month===i);
+    if(searchTerm){
+      monthFest=monthFest.filter(f=>{
+        const name=lang==="en"?f.en:f.hi;
+        return name.toLowerCase().includes(searchTerm);
+      });
+    }
+    if(monthFest.length===0) return;
+
+    let html=`<div class="month-section"><div class="title">${m}</div><div class="fest-row">`;
+    monthFest.forEach(f=>{
+      html+=`<div class="festival">
+        <div class="name">${lang==="en"?f.en:f.hi}</div>
+        <div class="date">${f.date}</div>
+        <div class="shubh">✔ Shubh: ${f.shubh}</div>
+        <div class="ashubh">✖ Ashubh: ${f.ashubh}</div>
+      </div>`;
+    });
+    html+="</div></div>";
+    container.innerHTML+=html;
+  });
+}
+
+// Initialize
+renderFestivals();
+</script>
+</body>
+</html>
